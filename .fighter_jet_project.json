@@ -1,0 +1,58 @@
+{
+  "name": "Test Project",
+  "description": "A test project",
+  "created_date": "2025-08-26T12:46:46.466242+00:00",
+  "last_modified": "2025-08-26T12:46:46.466258+00:00",
+  "status": "created",
+  "version": "1.0.0",
+  "author": "Test Author",
+  "tags": [],
+  "milestones": [
+    {
+      "id": "requirements",
+      "name": "Requirements Definition",
+      "description": "Define project requirements and specifications",
+      "status": "not_started",
+      "target_date": null,
+      "completion_date": null,
+      "dependencies": [],
+      "progress_percentage": 0.0
+    },
+    {
+      "id": "design",
+      "name": "Design Phase",
+      "description": "Complete aircraft design and configuration",
+      "status": "not_started",
+      "target_date": null,
+      "completion_date": null,
+      "dependencies": [
+        "requirements"
+      ],
+      "progress_percentage": 0.0
+    },
+    {
+      "id": "analysis",
+      "name": "Analysis and Simulation",
+      "description": "Perform comprehensive analysis and simulations",
+      "status": "not_started",
+      "target_date": null,
+      "completion_date": null,
+      "dependencies": [
+        "design"
+      ],
+      "progress_percentage": 0.0
+    },
+    {
+      "id": "validation",
+      "name": "Validation and Testing",
+      "description": "Validate design against requirements",
+      "status": "not_started",
+      "target_date": null,
+      "completion_date": null,
+      "dependencies": [
+        "analysis"
+      ],
+      "progress_percentage": 0.0
+    }
+  ]
+}

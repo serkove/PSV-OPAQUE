@@ -1,0 +1,40 @@
+access_control_enabled: false
+backup_enabled: true
+backup_interval_hours: 24
+cache_enabled: true
+cache_size_mb: 1024
+convergence_tolerance: 1.0e-06
+data_directory: ./data
+encryption_enabled: false
+engines:
+  aerodynamics:
+    cfd_mesh_density: medium
+    compressibility_effects: true
+    turbulence_model: k-omega-sst
+  design:
+    auto_optimize: false
+    module_library_path: ./modules
+    validation_strict: true
+  manufacturing:
+    cost_database_path: ./costs.db
+    optimization_method: genetic_algorithm
+    quality_standards: aerospace
+  materials:
+    database_path: ./materials.db
+    frequency_points: 1000
+    simulation_precision: high
+  propulsion:
+    cfd_solver: openfoam
+    optimization_enabled: true
+    thermal_analysis: true
+  sensors:
+    atmospheric_model: standard
+    multi_target_tracking: true
+    noise_modeling: true
+log_file: null
+log_format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+log_level: INFO
+max_iterations: 1000
+max_threads: null
+parallel_processing: true
+simulation_precision: double

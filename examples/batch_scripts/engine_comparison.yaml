@@ -1,0 +1,115 @@
+# Engine Performance Comparison Batch Script
+# Compare multiple engines across different operating conditions
+
+operations:
+  # F119 Engine Analysis
+  - name: "F119 Takeoff Performance"
+    type: "propulsion"
+    action: "analyze"
+    engine_id: "f119_pw_100"
+    conditions:
+      altitude: 0
+      mach_number: 0.0
+      throttle_setting: 1.0
+      afterburner_engaged: true
+
+  - name: "F119 Cruise Performance"
+    type: "propulsion"
+    action: "analyze"
+    engine_id: "f119_pw_100"
+    conditions:
+      altitude: 11000
+      mach_number: 1.5
+      throttle_setting: 0.8
+      afterburner_engaged: false
+
+  - name: "F119 Supercruise Performance"
+    type: "propulsion"
+    action: "analyze"
+    engine_id: "f119_pw_100"
+    conditions:
+      altitude: 15000
+      mach_number: 1.8
+      throttle_setting: 1.0
+      afterburner_engaged: false
+
+  # F135 Engine Analysis
+  - name: "F135 Takeoff Performance"
+    type: "propulsion"
+    action: "analyze"
+    engine_id: "f135_pw_100"
+    conditions:
+      altitude: 0
+      mach_number: 0.0
+      throttle_setting: 1.0
+      afterburner_engaged: true
+
+  - name: "F135 Cruise Performance"
+    type: "propulsion"
+    action: "analyze"
+    engine_id: "f135_pw_100"
+    conditions:
+      altitude: 11000
+      mach_number: 1.5
+      throttle_setting: 0.8
+      afterburner_engaged: false
+
+  - name: "F135 High Speed Performance"
+    type: "propulsion"
+    action: "analyze"
+    engine_id: "f135_pw_100"
+    conditions:
+      altitude: 15000
+      mach_number: 1.6
+      throttle_setting: 1.0
+      afterburner_engaged: true
+
+  # Advanced Ramjet Analysis
+  - name: "Ramjet High Speed Performance"
+    type: "propulsion"
+    action: "analyze"
+    engine_id: "advanced_ramjet_001"
+    conditions:
+      altitude: 18000
+      mach_number: 4.0
+      throttle_setting: 1.0
+      afterburner_engaged: false
+
+  - name: "Ramjet Hypersonic Performance"
+    type: "propulsion"
+    action: "analyze"
+    engine_id: "advanced_ramjet_001"
+    conditions:
+      altitude: 25000
+      mach_number: 5.0
+      throttle_setting: 1.0
+      afterburner_engaged: false
+
+  # Variable Cycle Engine Analysis
+  - name: "Variable Cycle Efficient Cruise"
+    type: "propulsion"
+    action: "analyze"
+    engine_id: "variable_cycle_001"
+    conditions:
+      altitude: 12000
+      mach_number: 0.9
+      throttle_setting: 0.7
+      afterburner_engaged: false
+
+  - name: "Variable Cycle High Speed"
+    type: "propulsion"
+    action: "analyze"
+    engine_id: "variable_cycle_001"
+    conditions:
+      altitude: 15000
+      mach_number: 2.2
+      throttle_setting: 1.0
+      afterburner_engaged: true
+
+# Batch configuration
+batch_config:
+  parallel_execution: true
+  max_parallel_jobs: 3
+  continue_on_error: true
+  output_format: "table"
+  generate_comparison_report: true

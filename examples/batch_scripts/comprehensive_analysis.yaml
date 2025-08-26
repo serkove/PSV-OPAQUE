@@ -1,0 +1,86 @@
+# Comprehensive Fighter Jet Analysis Batch Script
+# This script demonstrates a complete analysis workflow
+
+operations:
+  # Engine Performance Analysis
+  - name: "F119 Sea Level Performance"
+    type: "propulsion"
+    action: "analyze"
+    engine_id: "f119_pw_100"
+    conditions:
+      altitude: 0
+      mach_number: 0.0
+      throttle_setting: 1.0
+      afterburner_engaged: false
+
+  - name: "F119 High Altitude Performance"
+    type: "propulsion"
+    action: "analyze"
+    engine_id: "f119_pw_100"
+    conditions:
+      altitude: 15000
+      mach_number: 2.0
+      throttle_setting: 1.0
+      afterburner_engaged: true
+
+  - name: "F135 Comparison Analysis"
+    type: "propulsion"
+    action: "analyze"
+    engine_id: "f135_pw_100"
+    conditions:
+      altitude: 10000
+      mach_number: 1.5
+      throttle_setting: 1.0
+      afterburner_engaged: true
+
+  # Cruise Optimization
+  - name: "F119 Cruise Optimization"
+    type: "propulsion"
+    action: "optimize"
+    engine_id: "f119_pw_100"
+    aircraft_mass: 19700
+    altitude_range: [8000, 15000]
+    mach_range: [0.7, 1.2]
+
+  # Materials Analysis
+  - name: "Metamaterial Frequency Response"
+    type: "materials"
+    action: "metamaterial"
+    material_id: "META001"
+    frequencies: [1e9, 5e9, 10e9, 35e9, 100e9]
+    thickness: 0.001
+
+  - name: "UHTC Thermal Analysis"
+    type: "materials"
+    action: "thermal"
+    material_id: "UHTC001"
+    conditions:
+      mach_number: 5.0
+      altitude: 30000
+      angle_of_attack: 5.0
+      flight_time: 300
+    thickness: 0.01
+
+  # Design Operations
+  - name: "Create Test Configuration"
+    type: "design"
+    action: "create"
+    name: "Batch Test Aircraft"
+    platform: "su75"
+    output_file: "batch_test_config.json"
+
+  # Simulation Operations
+  - name: "Multi-Physics Simulation"
+    type: "simulation"
+    action: "multi-physics"
+    config_file: "batch_test_config.json"
+    scenario_file: "hypersonic_scenario.json"
+    output_directory: "simulation_results"
+
+# Batch configuration
+batch_config:
+  parallel_execution: true
+  max_parallel_jobs: 4
+  continue_on_error: true
+  output_format: "json"
+  log_level: "INFO"
