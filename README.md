@@ -1,6 +1,7 @@
 # PSV-OPAQUE: Advanced Modular Hypersonic Fighter Aircraft
 
-[
+![Design](assets/PSV.png)
+
 ## 🚀 Overview
 
 **PSV-OPAQUE** is an early prototype of a  6th-generation fighter aircraft that combines the modular design philosophy of the Russian SU-75 Checkmate with advanced capabilites from pradigm-shifting vehicles (PSVs) and Milorbs . This aircraft represents the pinnacle of aerospace engineering, capable of extreme hypersonic flight up to **Mach 60** while maintaining superior stealth characteristics and unprecedented multi-role operational flexibility.
@@ -8,7 +9,7 @@
 ### 🎯 Quick Start (5 Minutes)
 ```bash
 # 1. Clone and install
-git clone https://github.com/fighter-jet-sdk/psv-opaque.git
+git clone https://github.com/serkove/PSV-OPAQUE.git 
 cd psv-opaque && pip install -e .
 
 # 2. Verify installation  
@@ -27,7 +28,7 @@ fighter-jet-sdk interactive        # Interactive mode
 ```
 
 ### Key Achievements
-- **✅ Verified SDK**: Complete development environment operational
+- **Verified SDK**: Complete development environment operational
 - **Hypersonic Capability**: Mach 60 theoretical design capability  
 - **Advanced Materials**: 14 materials including metamaterials and UHTC
 - **Propulsion Models**: 4 engine types from turbofan to ramjet
@@ -740,7 +741,7 @@ production_plan = manufacturing_engine.plan_composite_manufacturing(
 #### Step 1: Clone and Install
 ```bash
 # Clone the repository
-git clone https://github.com/fighter-jet-sdk/psv-opaque.git
+git clone https://github.com/serkove/PSV-OPAQUE.git
 cd psv-opaque
 
 # Install dependencies and SDK
@@ -1075,45 +1076,28 @@ python3 examples/workflow_validation_demo.py
 
 ## 🤝 Contributing and Community
 
-### Open Source Components
-While the core PSV-OPAQUE design is proprietary, several SDK components are open source:
-- Basic aerodynamics models
-- Material property databases
-- Manufacturing cost models
-- Educational examples and tutorials
+### Open Source Research Project
+PSV-OPAQUE is an **open source research project** developed by **Serkove** for academic and educational purposes:
+
+- **Research Focus**: Theoretical aerospace engineering and software development
+- **Educational Use**: University courses, student projects, and academic research
+- **Open Collaboration**: Welcoming contributions from researchers worldwide
+- **No Military Application**: Purely theoretical and educational in nature
 
 ### Research Collaboration
 We actively collaborate with:
-- Leading aerospace universities
-- Government research laboratories
-- International space agencies
-- Advanced materials research centers
+- Leading aerospace universities and research institutions
+- Graduate students and academic researchers
+- Open source software development community
+- International aerospace engineering community
 
 ### Developer Community
-Join our growing community of aerospace engineers and developers:
-- **GitHub**: [github.com/fighter-jet-sdk](https://github.com/fighter-jet-sdk)
-- **Discord**: Active developer chat and support
-- **Conferences**: Annual Fighter Jet SDK Summit
-- **Publications**: Peer-reviewed research papers
+Join our growing community of aerospace engineers and researchers:
+- **GitHub**: [github.com/serkove/PSV-OPAQUE](https://github.com/serkove/PSV-OPAQUE)
+- **Issues**: Report bugs, request features, or ask research questions
+- **Discussions**: Join community discussions for research collaboration
+- **Academic Use**: Free for all educational and research purposes
 
----
-
-## 📄 License and Legal
-
-### Licensing
-- **SDK Core**: MIT License (open source components)
-- **PSV-OPAQUE Design**: Proprietary (licensed for research and development)
-- **Neural Interface**: Patent pending (international applications filed)
-- **Mil-Orb Technology**: Classified (government approval required)
-
-### Export Control
-This technology is subject to export control regulations. International use requires appropriate government approvals and licensing.
-
-### Safety Certification
-PSV-OPAQUE systems are certified by:
-- Federal Aviation Administration (FAA)
-- European Union Aviation Safety Agency (EASA)
-- International Civil Aviation Organization (ICAO)
 
 ---
 
@@ -1168,33 +1152,34 @@ python3 demo_fighter_jet_sdk.py              # ✅ Works
 - **Recommended**: Python 3.11, 32 GB RAM, 50 GB disk space
 - **For CFD**: Additional OpenFOAM installation required
 
-## 📞 Contact Information
 
-### Development Team
-- **Project Repository**: [github.com/fighter-jet-sdk/psv-opaque](https://github.com/fighter-jet-sdk/psv-opaque)
-- **Issues**: Report bugs and feature requests via GitHub Issues
-- **Documentation**: Available in `docs/` directory
 
-### Technical Support
-- **Installation Help**: See `docs/installation_guide.md`
-- **User Guide**: See `docs/user_guide.md`  
-- **Examples**: Working examples in `examples/` directory
-- **Testing**: Run `python3 test_basic_functionality.py` for validation
+## 📄 License and Legal
+
+### Open Source License
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+**Copyright (c) 2025 Serkove**
+
+### Research and Development Intent
+This project is developed exclusively for **research and development purposes**. See [RESEARCH_INTENT.md](RESEARCH_INTENT.md) for complete details.
+
+**Key Points:**
+- **Academic Research**: Intended for university research and education
+- **Theoretical Design**: All specifications are conceptual and theoretical
+- **No Military Use**: Not intended for actual weapons development
+- **Open Collaboration**: Welcoming academic and research contributions
+- **Educational Focus**: Supporting aerospace engineering education worldwide
+
+### Citation
+When using this work in academic research, please cite:
+```
+Serkove. (2025). PSV-OPAQUE: Advanced Fighter Aircraft Design SDK. 
+GitHub. https://github.com/serkove/PSV-OPAQUE
+```
 
 ---
 
-## 🏆 Conclusion
-
-**PSV-OPAQUE** represents the ultimate fusion of advanced aerospace engineering, cutting-edge materials science, and revolutionary human-machine interface technology. Through the comprehensive Fighter Jet SDK, this aircraft demonstrates that Mach 60 hypersonic flight with superior stealth characteristics is not just theoretically possible, but practically achievable.
-
-The combination of modular design philosophy, extreme thermal management, advanced neural interfaces, and intelligent orb systems creates an unprecedented capability that redefines air superiority and space-adjacent operations. With demonstrated mission success rates exceeding 92% and manufacturing costs competitive with current 5th generation fighters, PSV-OPAQUE establishes the foundation for 6th generation air power.
-
-The Fighter Jet SDK provides the complete development environment necessary to design, analyze, simulate, and manufacture such advanced systems, making cutting-edge aerospace technology accessible to engineers, researchers, and organizations worldwide.
-
-**The future of aerospace is here. The future is PSV-OPAQUE.**
-
----
-
-*© 2025 Fighter Jet SDK Development Team. All rights reserved.*
-*PSV-OPAQUE is a trademark of Advanced Aerospace Systems.*
-*This document contains forward-looking statements based on current technology development.*
+**© 2025 Serkove. Released under MIT License for research and educational use.**  
+**PSV-OPAQUE is a theoretical research project for academic purposes.**  
+**All specifications are conceptual and intended for educational use only.**
