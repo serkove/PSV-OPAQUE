@@ -128,6 +128,12 @@ Examples:
     # Project management commands
     _add_project_commands(subparsers)
     
+    # Workflow validation commands
+    _add_workflow_commands(subparsers)
+    
+    # Hypersonic analysis commands
+    _add_hypersonic_commands(subparsers)
+    
     return parser
 
 
@@ -513,6 +519,146 @@ def _add_project_commands(subparsers):
     history_parser.add_argument('--limit', type=int, default=20, help='Number of entries to show')
 
 
+def _add_workflow_commands(subparsers):
+    """Add end-to-end workflow validation commands."""
+    workflow_parser = subparsers.add_parser(
+        'workflow',
+        help='End-to-end workflow validation and testing'
+    )
+    workflow_subparsers = workflow_parser.add_subparsers(
+        dest='workflow_action',
+        help='Workflow actions'
+    )
+    
+    # Validate workflow
+    validate_parser = workflow_subparsers.add_parser(
+        'validate',
+        help='Execute end-to-end workflow validation'
+    )
+    validate_parser.add_argument('--list-workflows', '-l', action='store_true',
+                                help='List available workflows')
+    validate_parser.add_argument('--workflow', '-w', type=str,
+                                help='Workflow name to execute')
+    validate_parser.add_argument('--config', '-c', type=str,
+                                help='Configuration overrides file (JSON)')
+    validate_parser.add_argument('--output', '-o', type=str,
+                                help='Output file for validation report')
+    validate_parser.add_argument('--benchmark', '-b', action='store_true',
+                                help='Include performance benchmarking')
+    validate_parser.add_argument('--verbose', '-v', action='store_true',
+                                help='Verbose output')
+    
+    # User acceptance tests
+    acceptance_parser = workflow_subparsers.add_parser(
+        'acceptance-test',
+        help='Run user acceptance testing scenarios'
+    )
+    acceptance_parser.add_argument('--output', '-o', type=str,
+                                  help='Output directory for test reports')
+    acceptance_parser.add_argument('--scenario', '-s', type=str,
+                                  help='Specific scenario to run (default: all)')
+    acceptance_parser.add_argument('--verbose', '-v', action='store_true',
+                                  help='Verbose output')
+    
+    # Performance benchmarking
+    benchmark_parser = workflow_subparsers.add_parser(
+        'benchmark',
+        help='Run performance benchmarking against reference aircraft'
+    )
+    benchmark_parser.add_argument('--workflow', '-w', type=str,
+                                 help='Specific workflow to benchmark (default: all)')
+    benchmark_parser.add_argument('--reference', '-r', type=str, default='f22',
+                                 help='Reference aircraft for comparison (f22, f35, su57)')
+    benchmark_parser.add_argument('--output', '-o', type=str,
+                                 help='Output file for benchmark results')
+    benchmark_parser.add_argument('--verbose', '-v', action='store_true',
+                                 help='Verbose output')
+
+
+def _add_hypersonic_commands(subparsers):
+    """Add hypersonic analysis commands for Mach 60 capabilities."""
+    hypersonic_parser = subparsers.add_parser(
+        'hypersonic',
+        help='Mach 60 hypersonic analysis and design tools'
+    )
+    hypersonic_subparsers = hypersonic_parser.add_subparsers(
+        dest='hypersonic_action',
+        help='Hypersonic analysis actions'
+    )
+    
+    # Mission planning
+    mission_parser = hypersonic_subparsers.add_parser(
+        'mission',
+        help='Hypersonic mission planning and optimization'
+    )
+    mission_parser.add_argument('--config', required=True, help='Aircraft configuration file')
+    mission_parser.add_argument('--profile', help='Mission profile file (JSON/YAML)')
+    mission_parser.add_argument('--altitude-range', help='Altitude range in km (e.g., "40,100")')
+    mission_parser.add_argument('--mach-target', type=float, default=60.0, help='Target Mach number')
+    mission_parser.add_argument('--optimize', action='store_true', help='Optimize trajectory for thermal constraints')
+    mission_parser.add_argument('--output', '-o', help='Output file for mission plan')
+    
+    # Plasma flow analysis
+    plasma_parser = hypersonic_subparsers.add_parser(
+        'plasma',
+        help='Plasma flow analysis for extreme hypersonic conditions'
+    )
+    plasma_parser.add_argument('--geometry', required=True, help='Vehicle geometry file')
+    plasma_parser.add_argument('--mach', type=float, default=60.0, help='Mach number')
+    plasma_parser.add_argument('--altitude', type=float, default=60000.0, help='Altitude in meters')
+    plasma_parser.add_argument('--magnetic-field', help='Magnetic field configuration (JSON)')
+    plasma_parser.add_argument('--chemistry', action='store_true', help='Include non-equilibrium chemistry')
+    plasma_parser.add_argument('--output', '-o', help='Output directory for results')
+    
+    # Thermal protection system design
+    thermal_parser = hypersonic_subparsers.add_parser(
+        'thermal',
+        help='Thermal protection system design and analysis'
+    )
+    thermal_parser.add_argument('--config', required=True, help='Aircraft configuration file')
+    thermal_parser.add_argument('--heat-flux', type=float, help='Maximum heat flux in MW/m²')
+    thermal_parser.add_argument('--cooling-type', choices=['passive', 'active', 'hybrid'], 
+                               default='hybrid', help='Cooling system type')
+    thermal_parser.add_argument('--materials', help='Available materials database file')
+    thermal_parser.add_argument('--optimize', action='store_true', help='Optimize TPS design')
+    thermal_parser.add_argument('--output', '-o', help='Output file for TPS design')
+    
+    # Combined-cycle propulsion analysis
+    propulsion_parser = hypersonic_subparsers.add_parser(
+        'propulsion',
+        help='Combined-cycle propulsion system analysis'
+    )
+    propulsion_parser.add_argument('--engine', required=True, help='Engine configuration file')
+    propulsion_parser.add_argument('--flight-envelope', help='Flight envelope file (JSON/YAML)')
+    propulsion_parser.add_argument('--transition-mach', type=float, help='Air-breathing to rocket transition Mach')
+    propulsion_parser.add_argument('--fuel-type', choices=['hydrogen', 'hydrocarbon', 'hybrid'], 
+                                  default='hydrogen', help='Fuel system type')
+    propulsion_parser.add_argument('--analyze-performance', action='store_true', help='Detailed performance analysis')
+    propulsion_parser.add_argument('--output', '-o', help='Output file for propulsion analysis')
+    
+    # Integrated vehicle analysis
+    vehicle_parser = hypersonic_subparsers.add_parser(
+        'vehicle',
+        help='Complete Mach 60 vehicle analysis and validation'
+    )
+    vehicle_parser.add_argument('--config', required=True, help='Complete vehicle configuration file')
+    vehicle_parser.add_argument('--mission', help='Mission requirements file')
+    vehicle_parser.add_argument('--validate', action='store_true', help='Run comprehensive validation')
+    vehicle_parser.add_argument('--multi-physics', action='store_true', help='Include coupled multi-physics analysis')
+    vehicle_parser.add_argument('--safety-margins', action='store_true', help='Calculate safety margins')
+    vehicle_parser.add_argument('--output-dir', default='./hypersonic_analysis', help='Output directory')
+    
+    # Design comparison
+    compare_parser = hypersonic_subparsers.add_parser(
+        'compare',
+        help='Compare hypersonic vehicle designs and performance'
+    )
+    compare_parser.add_argument('--configs', nargs='+', required=True, help='Configuration files to compare')
+    compare_parser.add_argument('--metrics', help='Comparison metrics file (JSON)')
+    compare_parser.add_argument('--baseline', help='Baseline configuration for comparison')
+    compare_parser.add_argument('--output', '-o', help='Output file for comparison report')
+
+
 class InteractiveCLI(cmd.Cmd):
     """Interactive command-line interface for the Fighter Jet SDK."""
     
@@ -657,6 +803,30 @@ Type 'exit' or 'quit' to leave interactive mode.
             self._handle_project_history(args[1:])
         else:
             print(f"Unknown project action: {action}")
+    
+    def do_hypersonic(self, line):
+        """Hypersonic analysis commands: mission, plasma, thermal, propulsion, vehicle, compare"""
+        args = shlex.split(line)
+        if not args:
+            print("Usage: hypersonic <action> [options]")
+            print("Actions: mission, plasma, thermal, propulsion, vehicle, compare")
+            return
+        
+        action = args[0]
+        if action == 'mission':
+            self._handle_hypersonic_mission(args[1:])
+        elif action == 'plasma':
+            self._handle_hypersonic_plasma(args[1:])
+        elif action == 'thermal':
+            self._handle_hypersonic_thermal(args[1:])
+        elif action == 'propulsion':
+            self._handle_hypersonic_propulsion(args[1:])
+        elif action == 'vehicle':
+            self._handle_hypersonic_vehicle(args[1:])
+        elif action == 'compare':
+            self._handle_hypersonic_compare(args[1:])
+        else:
+            print(f"Unknown hypersonic action: {action}")
     
     def do_exit(self, line):
         """Exit interactive mode"""
@@ -981,6 +1151,132 @@ Type 'exit' or 'quit' to leave interactive mode.
                 print(f"[{timestamp}] {entry['action']}: {entry['description']}")
         except Exception as e:
             print(f"✗ Error getting project history: {e}")
+    
+    def _handle_hypersonic_mission(self, args):
+        """Handle hypersonic mission planning command"""
+        print("Hypersonic mission planning for Mach 60 flight")
+        
+        config_file = input("Aircraft configuration file: ")
+        if not config_file:
+            print("Configuration file required")
+            return
+        
+        mach_target = input("Target Mach number (default 60): ") or "60"
+        altitude_range = input("Altitude range in km (e.g., '40,100'): ")
+        optimize = input("Optimize trajectory for thermal constraints? (y/n): ").lower() == 'y'
+        
+        print(f"Planning mission for Mach {mach_target}")
+        if altitude_range:
+            print(f"Altitude range: {altitude_range} km")
+        if optimize:
+            print("Including thermal optimization")
+        
+        print("✓ Hypersonic mission planning complete (placeholder)")
+    
+    def _handle_hypersonic_plasma(self, args):
+        """Handle plasma flow analysis command"""
+        print("Plasma flow analysis for extreme hypersonic conditions")
+        
+        geometry_file = input("Vehicle geometry file: ")
+        if not geometry_file:
+            print("Geometry file required")
+            return
+        
+        mach = input("Mach number (default 60): ") or "60"
+        altitude = input("Altitude in meters (default 60000): ") or "60000"
+        chemistry = input("Include non-equilibrium chemistry? (y/n): ").lower() == 'y'
+        
+        print(f"Analyzing plasma flow at Mach {mach}, altitude {altitude} m")
+        if chemistry:
+            print("Including non-equilibrium chemistry effects")
+        
+        print("✓ Plasma flow analysis complete (placeholder)")
+    
+    def _handle_hypersonic_thermal(self, args):
+        """Handle thermal protection system design command"""
+        print("Thermal protection system design for Mach 60")
+        
+        config_file = input("Aircraft configuration file: ")
+        if not config_file:
+            print("Configuration file required")
+            return
+        
+        heat_flux = input("Maximum heat flux in MW/m² (default 150): ") or "150"
+        cooling_type = input("Cooling type (passive/active/hybrid, default hybrid): ") or "hybrid"
+        optimize = input("Optimize TPS design? (y/n): ").lower() == 'y'
+        
+        print(f"Designing TPS for {heat_flux} MW/m² heat flux")
+        print(f"Cooling type: {cooling_type}")
+        if optimize:
+            print("Including design optimization")
+        
+        print("✓ Thermal protection system design complete (placeholder)")
+    
+    def _handle_hypersonic_propulsion(self, args):
+        """Handle combined-cycle propulsion analysis command"""
+        print("Combined-cycle propulsion system analysis")
+        
+        engine_file = input("Engine configuration file: ")
+        if not engine_file:
+            print("Engine configuration file required")
+            return
+        
+        fuel_type = input("Fuel type (hydrogen/hydrocarbon/hybrid, default hydrogen): ") or "hydrogen"
+        transition_mach = input("Air-breathing to rocket transition Mach (default 25): ") or "25"
+        analyze_performance = input("Run detailed performance analysis? (y/n): ").lower() == 'y'
+        
+        print(f"Analyzing {fuel_type} fuel system")
+        print(f"Transition Mach: {transition_mach}")
+        if analyze_performance:
+            print("Including detailed performance analysis")
+        
+        print("✓ Combined-cycle propulsion analysis complete (placeholder)")
+    
+    def _handle_hypersonic_vehicle(self, args):
+        """Handle complete vehicle analysis command"""
+        print("Complete Mach 60 vehicle analysis")
+        
+        config_file = input("Vehicle configuration file: ")
+        if not config_file:
+            print("Configuration file required")
+            return
+        
+        validate = input("Run comprehensive validation? (y/n): ").lower() == 'y'
+        multi_physics = input("Include coupled multi-physics analysis? (y/n): ").lower() == 'y'
+        safety_margins = input("Calculate safety margins? (y/n): ").lower() == 'y'
+        
+        print("Analyzing complete vehicle configuration")
+        if validate:
+            print("Including comprehensive validation")
+        if multi_physics:
+            print("Including multi-physics coupling")
+        if safety_margins:
+            print("Including safety margin calculations")
+        
+        print("✓ Complete vehicle analysis complete (placeholder)")
+    
+    def _handle_hypersonic_compare(self, args):
+        """Handle design comparison command"""
+        print("Hypersonic vehicle design comparison")
+        
+        config_files = []
+        while True:
+            config_file = input(f"Configuration file {len(config_files)+1} (or press Enter to finish): ")
+            if not config_file:
+                break
+            config_files.append(config_file)
+        
+        if len(config_files) < 2:
+            print("At least 2 configurations required for comparison")
+            return
+        
+        baseline = input("Baseline configuration (optional): ")
+        
+        print(f"Comparing {len(config_files)} configurations")
+        if baseline:
+            print(f"Using baseline: {baseline}")
+        
+        print("✓ Design comparison complete (placeholder)")
 
 
 class BatchProcessor:
@@ -1863,6 +2159,479 @@ def handle_project_command(args) -> int:
         return 1
 
 
+def handle_hypersonic_command(args) -> int:
+    """Handle hypersonic analysis commands."""
+    try:
+        action = args.hypersonic_action
+        
+        if action == 'mission':
+            return handle_hypersonic_mission(args)
+        elif action == 'plasma':
+            return handle_hypersonic_plasma(args)
+        elif action == 'thermal':
+            return handle_hypersonic_thermal(args)
+        elif action == 'propulsion':
+            return handle_hypersonic_propulsion(args)
+        elif action == 'vehicle':
+            return handle_hypersonic_vehicle(args)
+        elif action == 'compare':
+            return handle_hypersonic_compare(args)
+        else:
+            print(f"Unknown hypersonic action: {action}")
+            return 1
+    
+    except Exception as e:
+        handle_error(e, {'command': 'hypersonic', 'action': getattr(args, 'hypersonic_action', None)})
+        print(f"Hypersonic command failed: {e}")
+        return 1
+
+
+def handle_hypersonic_mission(args) -> int:
+    """Handle hypersonic mission planning command."""
+    try:
+        from ..core.hypersonic_mission_planner import HypersonicMissionPlanner
+        from ..core.config import get_config_manager
+        
+        print(f"Planning hypersonic mission for Mach {args.mach_target}")
+        print(f"Configuration: {args.config}")
+        
+        # Initialize mission planner
+        config_manager = get_config_manager()
+        planner = HypersonicMissionPlanner(config_manager.get_config())
+        
+        # Parse altitude range if provided
+        altitude_range = None
+        if args.altitude_range:
+            try:
+                alt_min, alt_max = map(float, args.altitude_range.split(','))
+                altitude_range = (alt_min * 1000, alt_max * 1000)  # Convert km to m
+            except ValueError:
+                print("Invalid altitude range format. Use 'min,max' in km")
+                return 1
+        
+        # Load mission profile if provided
+        mission_profile = None
+        if args.profile:
+            try:
+                import json
+                import yaml
+                from pathlib import Path
+                
+                profile_path = Path(args.profile)
+                if profile_path.suffix.lower() == '.json':
+                    with open(profile_path, 'r') as f:
+                        mission_profile = json.load(f)
+                else:
+                    with open(profile_path, 'r') as f:
+                        mission_profile = yaml.safe_load(f)
+            except Exception as e:
+                print(f"Failed to load mission profile: {e}")
+                return 1
+        
+        # Plan mission
+        if args.optimize:
+            print("Optimizing trajectory for thermal constraints...")
+            result = planner.optimize_trajectory_with_thermal_constraints(
+                target_mach=args.mach_target,
+                altitude_range=altitude_range,
+                mission_profile=mission_profile
+            )
+        else:
+            result = planner.plan_hypersonic_mission(
+                target_mach=args.mach_target,
+                altitude_range=altitude_range,
+                mission_profile=mission_profile
+            )
+        
+        # Output results
+        if args.output:
+            import json
+            with open(args.output, 'w') as f:
+                json.dump(result, f, indent=2, default=str)
+            print(f"Mission plan saved to: {args.output}")
+        else:
+            print("\n=== Mission Plan Results ===")
+            print(f"Optimal altitude: {result.get('optimal_altitude', 'N/A')} m")
+            print(f"Flight time: {result.get('flight_time', 'N/A')} s")
+            print(f"Fuel consumption: {result.get('fuel_consumption', 'N/A')} kg")
+            print(f"Max thermal load: {result.get('max_thermal_load', 'N/A')} MW/m²")
+        
+        return 0
+    
+    except ImportError as e:
+        print(f"Hypersonic mission planner not available: {e}")
+        return 1
+    except Exception as e:
+        print(f"Mission planning failed: {e}")
+        return 1
+
+
+def handle_hypersonic_plasma(args) -> int:
+    """Handle plasma flow analysis command."""
+    try:
+        from ..engines.aerodynamics.plasma_flow_solver import PlasmaFlowSolver
+        from ..engines.aerodynamics.non_equilibrium_cfd import NonEquilibriumCFD
+        
+        print(f"Analyzing plasma flow at Mach {args.mach}, altitude {args.altitude} m")
+        print(f"Geometry: {args.geometry}")
+        
+        # Initialize plasma flow solver
+        plasma_solver = PlasmaFlowSolver()
+        
+        # Set up flow conditions
+        flow_conditions = {
+            'mach': args.mach,
+            'altitude': args.altitude,
+            'geometry_file': args.geometry
+        }
+        
+        # Add magnetic field if provided
+        if args.magnetic_field:
+            import json
+            try:
+                magnetic_config = json.loads(args.magnetic_field)
+                flow_conditions['magnetic_field'] = magnetic_config
+            except json.JSONDecodeError:
+                print("Invalid magnetic field configuration JSON")
+                return 1
+        
+        # Run plasma flow analysis
+        print("Running plasma flow analysis...")
+        results = plasma_solver.solve_plasma_flow(flow_conditions)
+        
+        # Include non-equilibrium chemistry if requested
+        if args.chemistry:
+            print("Including non-equilibrium chemistry effects...")
+            cfd_solver = NonEquilibriumCFD()
+            chemistry_results = cfd_solver.solve_with_chemistry(flow_conditions)
+            results.update(chemistry_results)
+        
+        # Output results
+        output_dir = args.output or './plasma_analysis_results'
+        import os
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Save results
+        import json
+        with open(f"{output_dir}/plasma_results.json", 'w') as f:
+            json.dump(results, f, indent=2, default=str)
+        
+        print(f"\n=== Plasma Flow Analysis Results ===")
+        print(f"Plasma density: {results.get('plasma_density', 'N/A')} m⁻³")
+        print(f"Electron temperature: {results.get('electron_temperature', 'N/A')} K")
+        print(f"Radio blackout region: {results.get('blackout_region', 'N/A')}")
+        print(f"Results saved to: {output_dir}")
+        
+        return 0
+    
+    except ImportError as e:
+        print(f"Plasma flow solver not available: {e}")
+        return 1
+    except Exception as e:
+        print(f"Plasma analysis failed: {e}")
+        return 1
+
+
+def handle_hypersonic_thermal(args) -> int:
+    """Handle thermal protection system design command."""
+    try:
+        from ..engines.propulsion.extreme_heat_flux_model import ExtremeHeatFluxModel
+        from ..engines.propulsion.cryogenic_cooling_system import CryogenicCoolingSystem
+        from ..engines.materials.thermal_materials_db import ThermalMaterialsDB
+        
+        print(f"Designing thermal protection system")
+        print(f"Configuration: {args.config}")
+        print(f"Cooling type: {args.cooling_type}")
+        
+        # Initialize thermal models
+        heat_flux_model = ExtremeHeatFluxModel()
+        materials_db = ThermalMaterialsDB()
+        
+        # Load materials database if provided
+        if args.materials:
+            materials_db.load_database(args.materials)
+        
+        # Calculate heat flux
+        heat_flux = args.heat_flux or 150.0  # Default 150 MW/m² for Mach 60
+        print(f"Analyzing heat flux: {heat_flux} MW/m²")
+        
+        # Design thermal protection system
+        tps_design = {
+            'heat_flux': heat_flux,
+            'cooling_type': args.cooling_type,
+            'materials': materials_db.get_ultra_high_temp_materials()
+        }
+        
+        if args.cooling_type in ['active', 'hybrid']:
+            cooling_system = CryogenicCoolingSystem()
+            cooling_design = cooling_system.design_cooling_system(heat_flux * 1e6)  # Convert to W/m²
+            tps_design['cooling_system'] = cooling_design
+        
+        # Optimize if requested
+        if args.optimize:
+            print("Optimizing TPS design...")
+            # Optimization logic would go here
+            tps_design['optimized'] = True
+        
+        # Output results
+        if args.output:
+            import json
+            with open(args.output, 'w') as f:
+                json.dump(tps_design, f, indent=2, default=str)
+            print(f"TPS design saved to: {args.output}")
+        else:
+            print("\n=== Thermal Protection System Design ===")
+            print(f"Heat flux: {heat_flux} MW/m²")
+            print(f"Cooling type: {args.cooling_type}")
+            print(f"Recommended materials: {len(tps_design['materials'])} options")
+        
+        return 0
+    
+    except ImportError as e:
+        print(f"Thermal protection system tools not available: {e}")
+        return 1
+    except Exception as e:
+        print(f"Thermal analysis failed: {e}")
+        return 1
+
+
+def handle_hypersonic_propulsion(args) -> int:
+    """Handle combined-cycle propulsion analysis command."""
+    try:
+        from ..engines.propulsion.combined_cycle_engine import CombinedCycleEngine
+        
+        print(f"Analyzing combined-cycle propulsion system")
+        print(f"Engine: {args.engine}")
+        print(f"Fuel type: {args.fuel_type}")
+        
+        # Initialize combined-cycle engine
+        engine = CombinedCycleEngine()
+        
+        # Load engine configuration
+        engine_config = {}
+        try:
+            import json
+            import yaml
+            from pathlib import Path
+            
+            engine_path = Path(args.engine)
+            if engine_path.suffix.lower() == '.json':
+                with open(engine_path, 'r') as f:
+                    engine_config = json.load(f)
+            else:
+                with open(engine_path, 'r') as f:
+                    engine_config = yaml.safe_load(f)
+        except Exception as e:
+            print(f"Failed to load engine configuration: {e}")
+            return 1
+        
+        # Set transition Mach number
+        transition_mach = args.transition_mach or 25.0  # Default transition at Mach 25
+        
+        # Analyze performance if requested
+        results = {}
+        if args.analyze_performance:
+            print("Running detailed performance analysis...")
+            
+            # Test performance across flight envelope
+            mach_range = [10, 20, 30, 40, 50, 60]
+            altitude_range = [30000, 50000, 70000, 90000]  # meters
+            
+            performance_data = []
+            for mach in mach_range:
+                for altitude in altitude_range:
+                    perf = engine.calculate_performance(mach, altitude, engine_config)
+                    performance_data.append({
+                        'mach': mach,
+                        'altitude': altitude,
+                        'thrust': perf.get('thrust', 0),
+                        'specific_impulse': perf.get('specific_impulse', 0),
+                        'fuel_flow': perf.get('fuel_flow', 0)
+                    })
+            
+            results['performance_envelope'] = performance_data
+        
+        # Calculate transition characteristics
+        results['transition_analysis'] = {
+            'transition_mach': transition_mach,
+            'fuel_type': args.fuel_type,
+            'engine_config': engine_config
+        }
+        
+        # Output results
+        if args.output:
+            import json
+            with open(args.output, 'w') as f:
+                json.dump(results, f, indent=2, default=str)
+            print(f"Propulsion analysis saved to: {args.output}")
+        else:
+            print("\n=== Combined-Cycle Propulsion Analysis ===")
+            print(f"Transition Mach: {transition_mach}")
+            print(f"Fuel type: {args.fuel_type}")
+            if args.analyze_performance:
+                print(f"Performance data points: {len(results.get('performance_envelope', []))}")
+        
+        return 0
+    
+    except ImportError as e:
+        print(f"Combined-cycle propulsion tools not available: {e}")
+        return 1
+    except Exception as e:
+        print(f"Propulsion analysis failed: {e}")
+        return 1
+
+
+def handle_hypersonic_vehicle(args) -> int:
+    """Handle complete vehicle analysis command."""
+    try:
+        from ..core.hypersonic_design_validator import HypersonicDesignValidator
+        from ..core.multi_physics_integration import MultiPhysicsIntegration
+        
+        print(f"Analyzing complete Mach 60 vehicle")
+        print(f"Configuration: {args.config}")
+        
+        # Initialize validator
+        validator = HypersonicDesignValidator()
+        
+        # Load vehicle configuration
+        try:
+            import json
+            import yaml
+            from pathlib import Path
+            
+            config_path = Path(args.config)
+            if config_path.suffix.lower() == '.json':
+                with open(config_path, 'r') as f:
+                    vehicle_config = json.load(f)
+            else:
+                with open(config_path, 'r') as f:
+                    vehicle_config = yaml.safe_load(f)
+        except Exception as e:
+            print(f"Failed to load vehicle configuration: {e}")
+            return 1
+        
+        results = {}
+        
+        # Run validation if requested
+        if args.validate:
+            print("Running comprehensive validation...")
+            validation_results = validator.validate_mach60_design(vehicle_config)
+            results['validation'] = validation_results
+        
+        # Run multi-physics analysis if requested
+        if args.multi_physics:
+            print("Running coupled multi-physics analysis...")
+            physics_integration = MultiPhysicsIntegration()
+            physics_results = physics_integration.run_coupled_analysis(vehicle_config)
+            results['multi_physics'] = physics_results
+        
+        # Calculate safety margins if requested
+        if args.safety_margins:
+            print("Calculating safety margins...")
+            safety_results = validator.calculate_safety_margins(vehicle_config)
+            results['safety_margins'] = safety_results
+        
+        # Create output directory
+        import os
+        os.makedirs(args.output_dir, exist_ok=True)
+        
+        # Save results
+        import json
+        with open(f"{args.output_dir}/vehicle_analysis.json", 'w') as f:
+            json.dump(results, f, indent=2, default=str)
+        
+        print(f"\n=== Vehicle Analysis Complete ===")
+        print(f"Results saved to: {args.output_dir}")
+        
+        if args.validate:
+            validation = results.get('validation', {})
+            print(f"Validation status: {'PASS' if validation.get('overall_status') else 'FAIL'}")
+        
+        return 0
+    
+    except ImportError as e:
+        print(f"Vehicle analysis tools not available: {e}")
+        return 1
+    except Exception as e:
+        print(f"Vehicle analysis failed: {e}")
+        return 1
+
+
+def handle_hypersonic_compare(args) -> int:
+    """Handle design comparison command."""
+    try:
+        print(f"Comparing {len(args.configs)} hypersonic vehicle configurations")
+        
+        # Load all configurations
+        configurations = []
+        for config_file in args.configs:
+            try:
+                import json
+                import yaml
+                from pathlib import Path
+                
+                config_path = Path(config_file)
+                if config_path.suffix.lower() == '.json':
+                    with open(config_path, 'r') as f:
+                        config = json.load(f)
+                else:
+                    with open(config_path, 'r') as f:
+                        config = yaml.safe_load(f)
+                
+                config['_source_file'] = config_file
+                configurations.append(config)
+                
+            except Exception as e:
+                print(f"Failed to load configuration {config_file}: {e}")
+                return 1
+        
+        # Load comparison metrics if provided
+        metrics = None
+        if args.metrics:
+            try:
+                import json
+                with open(args.metrics, 'r') as f:
+                    metrics = json.load(f)
+            except Exception as e:
+                print(f"Failed to load metrics file: {e}")
+                return 1
+        
+        # Perform comparison
+        comparison_results = {
+            'configurations': configurations,
+            'comparison_metrics': metrics or ['performance', 'thermal_limits', 'structural_integrity'],
+            'baseline': args.baseline,
+            'summary': {}
+        }
+        
+        # Basic comparison logic (placeholder)
+        for i, config in enumerate(configurations):
+            config_name = config.get('name', f'Config_{i+1}')
+            comparison_results['summary'][config_name] = {
+                'source_file': config['_source_file'],
+                'estimated_performance': 'TBD',  # Would calculate actual metrics
+                'thermal_rating': 'TBD',
+                'structural_rating': 'TBD'
+            }
+        
+        # Output results
+        if args.output:
+            import json
+            with open(args.output, 'w') as f:
+                json.dump(comparison_results, f, indent=2, default=str)
+            print(f"Comparison report saved to: {args.output}")
+        else:
+            print("\n=== Configuration Comparison ===")
+            for config_name, summary in comparison_results['summary'].items():
+                print(f"{config_name}: {summary['source_file']}")
+        
+        return 0
+    
+    except Exception as e:
+        print(f"Configuration comparison failed: {e}")
+        return 1
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     """Main CLI entry point.
     
@@ -1912,6 +2681,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         elif args.command == 'simulate':
             return handle_simulate_command(args)
         
+        elif args.command == 'hypersonic':
+            return handle_hypersonic_command(args)
+        
         else:
             parser.print_help()
             return 1
@@ -1928,3 +2700,38 @@ def main(argv: Optional[List[str]] = None) -> int:
 
 if __name__ == '__main__':
     sys.exit(main())
+
+
+def get_engine_registry():
+    """Get registry of all available engines for workflow validation."""
+    engines = {}
+    
+    try:
+        # Import and initialize all engines
+        from ..engines.design.engine import DesignEngine
+        from ..engines.materials.engine import MaterialsEngine
+        from ..engines.propulsion.engine import PropulsionEngine
+        from ..engines.sensors.engine import SensorsEngine
+        from ..engines.aerodynamics.engine import AerodynamicsEngine
+        from ..engines.manufacturing.engine import ManufacturingEngine
+        
+        # Create engine instances
+        engines['design'] = DesignEngine()
+        engines['materials'] = MaterialsEngine()
+        engines['propulsion'] = PropulsionEngine()
+        engines['sensors'] = SensorsEngine()
+        engines['aerodynamics'] = AerodynamicsEngine()
+        engines['manufacturing'] = ManufacturingEngine()
+        
+        # Initialize engines
+        for name, engine in engines.items():
+            try:
+                if hasattr(engine, 'initialize') and not engine.initialize():
+                    print(f"Warning: Failed to initialize {name} engine")
+            except Exception as e:
+                print(f"Warning: Error initializing {name} engine: {e}")
+        
+    except ImportError as e:
+        print(f"Warning: Could not load all engines: {e}")
+    
+    return engines

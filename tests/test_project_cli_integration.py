@@ -18,9 +18,17 @@ class TestProjectCLIIntegration:
         self.temp_dir = tempfile.mkdtemp()
         self.workspace_path = Path(self.temp_dir) / "test_project"
         self.workspace_path.mkdir()
+        
+        # Clear any existing project state
+        from fighter_jet_sdk.cli.project_manager import project_manager
+        project_manager.current_workspace = None
     
     def teardown_method(self):
         """Clean up test environment."""
+        # Clear project state
+        from fighter_jet_sdk.cli.project_manager import project_manager
+        project_manager.current_workspace = None
+        
         shutil.rmtree(self.temp_dir)
     
     def test_create_project_command(self):
@@ -64,8 +72,14 @@ class TestProjectCLIIntegration:
             path=None
         )
         
-        with patch('os.getcwd', return_value=str(self.workspace_path)):
+        # Change to the test workspace directory
+        import os
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(str(self.workspace_path))
             result = handle_project_command(args)
+        finally:
+            os.chdir(original_cwd)
         
         assert result == 0
         assert (self.workspace_path / '.fighter_jet_project.json').exists()
@@ -103,14 +117,24 @@ class TestProjectCLIIntegration:
         )
         handle_project_command(create_args)
         
+        # Clear project state to simulate fresh start
+        from fighter_jet_sdk.cli.project_manager import project_manager
+        project_manager.current_workspace = None
+        
         # Open project without path
         open_args = argparse.Namespace(
             project_action='open',
             path=None
         )
         
-        with patch('os.getcwd', return_value=str(self.workspace_path)):
+        # Change to the test workspace directory
+        import os
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(str(self.workspace_path))
             result = handle_project_command(open_args)
+        finally:
+            os.chdir(original_cwd)
         
         assert result == 0
     
@@ -126,6 +150,10 @@ class TestProjectCLIIntegration:
     
     def test_status_command_no_project(self):
         """Test status command when no project is open."""
+        # Clear any existing project state
+        from fighter_jet_sdk.cli.project_manager import project_manager
+        project_manager.current_workspace = None
+        
         args = argparse.Namespace(project_action='status')
         
         result = handle_project_command(args)

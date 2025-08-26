@@ -43,12 +43,22 @@ class EngineType(Enum):
     HYBRID = auto()
 
 
+class ExtremePropulsionType(Enum):
+    """Extreme hypersonic propulsion types for Mach 60+ flight."""
+    DUAL_MODE_SCRAMJET = auto()
+    COMBINED_CYCLE_AIRBREATHING = auto()
+    ROCKET_ASSISTED_SCRAMJET = auto()
+    MAGNETOPLASMADYNAMIC = auto()
+    NUCLEAR_THERMAL = auto()
+
+
 class FlightRegime(Enum):
     """Flight speed regimes."""
     SUBSONIC = auto()
     TRANSONIC = auto()
     SUPERSONIC = auto()
     HYPERSONIC = auto()
+    EXTREME_HYPERSONIC = auto()  # Mach 25+
 
 
 class ManufacturingProcess(Enum):
@@ -59,3 +69,20 @@ class ManufacturingProcess(Enum):
     RESIN_TRANSFER_MOLDING = auto()
     ADDITIVE_MANUFACTURING = auto()
     CONVENTIONAL_MACHINING = auto()
+
+
+class PlasmaRegime(Enum):
+    """Plasma ionization regimes for extreme hypersonic flight."""
+    WEAKLY_IONIZED = auto()
+    PARTIALLY_IONIZED = auto()
+    FULLY_IONIZED = auto()
+    MAGNETIZED_PLASMA = auto()
+
+
+class ThermalProtectionType(Enum):
+    """Thermal protection system types for extreme conditions."""
+    PASSIVE_ABLATIVE = auto()
+    ACTIVE_TRANSPIRATION = auto()
+    REGENERATIVE_COOLING = auto()
+    RADIATIVE_COOLING = auto()
+    HYBRID_SYSTEM = auto()

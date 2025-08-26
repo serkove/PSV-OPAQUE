@@ -9,7 +9,7 @@ import yaml
 import numpy as np
 from pathlib import Path
 
-from .enums import ModuleType, MaterialType, SensorType, EngineType, FlightRegime
+from .enums import ModuleType, MaterialType, SensorType, EngineType, FlightRegime, PlasmaRegime, ThermalProtectionType, ExtremePropulsionType
 
 
 @dataclass
@@ -1433,3 +1433,969 @@ class Velocity3D:
     def from_array(cls, arr: np.ndarray) -> 'Velocity3D':
         """Create from numpy array."""
         return cls(vx=arr[0], vy=arr[1], vz=arr[2])
+
+
+# Extreme Hypersonic Data Models
+
+@dataclass
+class PlasmaConditions:
+    """Plasma conditions for extreme hypersonic flight analysis."""
+    electron_density: float  # m⁻³
+    electron_temperature: float  # K
+    ion_temperature: float  # K
+    magnetic_field: np.ndarray  # Tesla [Bx, By, Bz]
+    plasma_frequency: float  # Hz
+    debye_length: float  # m
+    plasma_regime: 'PlasmaRegime' = field(default_factory=lambda: PlasmaRegime.WEAKLY_IONIZED)
+    
+    def __post_init__(self):
+        """Validate plasma conditions after initialization."""
+        if isinstance(self.magnetic_field, (list, tuple)):
+            self.magnetic_field = np.array(self.magnetic_field)
+        elif not isinstance(self.magnetic_field, np.ndarray):
+            self.magnetic_field = np.array([0.0, 0.0, 0.0])
+    
+    def validate_conditions(self) -> List[str]:
+        """Validate plasma conditions and return list of errors."""
+        errors = []
+        
+        if self.electron_density < 0:
+            errors.append("Electron density cannot be negative")
+        
+        if self.electron_temperature <= 0:
+            errors.append("Electron temperature must be positive")
+        
+        if self.ion_temperature <= 0:
+            errors.append("Ion temperature must be positive")
+        
+        if self.plasma_frequency < 0:
+            errors.append("Plasma frequency cannot be negative")
+        
+        if self.debye_length <= 0:
+            errors.append("Debye length must be positive")
+        
+        if len(self.magnetic_field) != 3:
+            errors.append("Magnetic field must be 3D vector")
+        
+        return errors
+    
+    def calculate_plasma_beta(self, pressure: float) -> float:
+        """Calculate plasma beta parameter (ratio of plasma pressure to magnetic pressure)."""
+        if np.linalg.norm(self.magnetic_field) == 0:
+            return float('inf')
+        
+        magnetic_pressure = np.linalg.norm(self.magnetic_field)**2 / (2 * 4e-7 * np.pi)  # μ₀ = 4π×10⁻⁷
+        return pressure / magnetic_pressure if magnetic_pressure > 0 else float('inf')
+
+
+@dataclass
+class CombinedCyclePerformance:
+    """Performance characteristics for combined-cycle propulsion systems."""
+    air_breathing_thrust: float  # N
+    rocket_thrust: float  # N
+    transition_mach: float  # Mach number for mode transition
+    fuel_flow_air_breathing: float  # kg/s
+    fuel_flow_rocket: float  # kg/s
+    specific_impulse: float  # s
+    combustion_efficiency: float = 0.95  # dimensionless
+    nozzle_efficiency: float = 0.98  # dimensionless
+    
+    def validate_performance(self) -> List[str]:
+        """Validate combined-cycle performance data."""
+        errors = []
+        
+        if self.air_breathing_thrust < 0:
+            errors.append("Air-breathing thrust cannot be negative")
+        
+        if self.rocket_thrust < 0:
+            errors.append("Rocket thrust cannot be negative")
+        
+        if self.transition_mach <= 0:
+            errors.append("Transition Mach number must be positive")
+        
+        if self.fuel_flow_air_breathing < 0:
+            errors.append("Air-breathing fuel flow cannot be negative")
+        
+        if self.fuel_flow_rocket < 0:
+            errors.append("Rocket fuel flow cannot be negative")
+        
+        if self.specific_impulse <= 0:
+            errors.append("Specific impulse must be positive")
+        
+        if not (0 < self.combustion_efficiency <= 1):
+            errors.append("Combustion efficiency must be between 0 and 1")
+        
+        if not (0 < self.nozzle_efficiency <= 1):
+            errors.append("Nozzle efficiency must be between 0 and 1")
+        
+        return errors
+    
+    def calculate_total_thrust(self, mach_number: float) -> float:
+        """Calculate total thrust based on flight Mach number."""
+        if mach_number < self.transition_mach:
+            return self.air_breathing_thrust
+        else:
+            # Transition region - blend both modes
+            blend_factor = min(1.0, (mach_number - self.transition_mach) / 5.0)
+            return (1 - blend_factor) * self.air_breathing_thrust + blend_factor * self.rocket_thrust
+    
+    def calculate_total_fuel_flow(self, mach_number: float) -> float:
+        """Calculate total fuel flow based on flight Mach number."""
+        if mach_number < self.transition_mach:
+            return self.fuel_flow_air_breathing
+        else:
+            blend_factor = min(1.0, (mach_number - self.transition_mach) / 5.0)
+            return (1 - blend_factor) * self.fuel_flow_air_breathing + blend_factor * self.fuel_flow_rocket
+
+
+@dataclass
+class AblativeLayer:
+    """Ablative layer specification for thermal protection."""
+    material_id: str
+    thickness: float  # m
+    density: float  # kg/m³
+    heat_of_ablation: float  # J/kg
+    char_yield: float  # dimensionless (0-1)
+    
+    def validate_layer(self) -> List[str]:
+        """Validate ablative layer properties."""
+        errors = []
+        
+        if not self.material_id.strip():
+            errors.append("Material ID cannot be empty")
+        
+        if self.thickness <= 0:
+            errors.append("Layer thickness must be positive")
+        
+        if self.density <= 0:
+            errors.append("Layer density must be positive")
+        
+        if self.heat_of_ablation <= 0:
+            errors.append("Heat of ablation must be positive")
+        
+        if not (0 <= self.char_yield <= 1):
+            errors.append("Char yield must be between 0 and 1")
+        
+        return errors
+
+
+@dataclass
+class CoolingChannel:
+    """Active cooling channel specification."""
+    channel_id: str
+    diameter: float  # m
+    length: float  # m
+    coolant_type: str
+    mass_flow_rate: float  # kg/s
+    inlet_temperature: float  # K
+    inlet_pressure: float  # Pa
+    
+    def validate_channel(self) -> List[str]:
+        """Validate cooling channel properties."""
+        errors = []
+        
+        if not self.channel_id.strip():
+            errors.append("Channel ID cannot be empty")
+        
+        if self.diameter <= 0:
+            errors.append("Channel diameter must be positive")
+        
+        if self.length <= 0:
+            errors.append("Channel length must be positive")
+        
+        if not self.coolant_type.strip():
+            errors.append("Coolant type cannot be empty")
+        
+        if self.mass_flow_rate <= 0:
+            errors.append("Mass flow rate must be positive")
+        
+        if self.inlet_temperature <= 0:
+            errors.append("Inlet temperature must be positive")
+        
+        if self.inlet_pressure <= 0:
+            errors.append("Inlet pressure must be positive")
+        
+        return errors
+    
+    def calculate_reynolds_number(self, viscosity: float) -> float:
+        """Calculate Reynolds number for the cooling channel."""
+        if viscosity <= 0:
+            return 0.0
+        
+        velocity = self.mass_flow_rate / (np.pi * (self.diameter/2)**2 * 1000)  # Assuming water density
+        return (1000 * velocity * self.diameter) / viscosity
+
+
+@dataclass
+class InsulationLayer:
+    """Insulation layer specification."""
+    material_id: str
+    thickness: float  # m
+    thermal_conductivity: float  # W/(m⋅K)
+    max_operating_temperature: float  # K
+    
+    def validate_layer(self) -> List[str]:
+        """Validate insulation layer properties."""
+        errors = []
+        
+        if not self.material_id.strip():
+            errors.append("Material ID cannot be empty")
+        
+        if self.thickness <= 0:
+            errors.append("Layer thickness must be positive")
+        
+        if self.thermal_conductivity <= 0:
+            errors.append("Thermal conductivity must be positive")
+        
+        if self.max_operating_temperature <= 0:
+            errors.append("Maximum operating temperature must be positive")
+        
+        return errors
+
+
+@dataclass
+class ThermalProtectionSystem:
+    """Complete thermal protection system specification."""
+    system_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    protection_type: 'ThermalProtectionType' = ThermalProtectionType.PASSIVE_ABLATIVE
+    ablative_layers: List[AblativeLayer] = field(default_factory=list)
+    active_cooling_channels: List[CoolingChannel] = field(default_factory=list)
+    insulation_layers: List[InsulationLayer] = field(default_factory=list)
+    total_thickness: float = 0.0  # m
+    total_mass: float = 0.0  # kg
+    cooling_effectiveness: float = 0.0  # dimensionless (0-1)
+    max_heat_flux_capacity: float = 0.0  # W/m²
+    
+    def validate_system(self) -> List[str]:
+        """Validate thermal protection system."""
+        errors = []
+        
+        if not self.system_id.strip():
+            errors.append("System ID cannot be empty")
+        
+        if self.total_thickness < 0:
+            errors.append("Total thickness cannot be negative")
+        
+        if self.total_mass < 0:
+            errors.append("Total mass cannot be negative")
+        
+        if not (0 <= self.cooling_effectiveness <= 1):
+            errors.append("Cooling effectiveness must be between 0 and 1")
+        
+        if self.max_heat_flux_capacity < 0:
+            errors.append("Maximum heat flux capacity cannot be negative")
+        
+        # Validate individual layers
+        for i, layer in enumerate(self.ablative_layers):
+            layer_errors = layer.validate_layer()
+            errors.extend([f"Ablative layer {i}: {error}" for error in layer_errors])
+        
+        for i, channel in enumerate(self.active_cooling_channels):
+            channel_errors = channel.validate_channel()
+            errors.extend([f"Cooling channel {i}: {error}" for error in channel_errors])
+        
+        for i, layer in enumerate(self.insulation_layers):
+            layer_errors = layer.validate_layer()
+            errors.extend([f"Insulation layer {i}: {error}" for error in layer_errors])
+        
+        # System-level validation
+        if self.protection_type == ThermalProtectionType.ACTIVE_TRANSPIRATION and not self.active_cooling_channels:
+            errors.append("Active transpiration cooling requires cooling channels")
+        
+        if self.protection_type == ThermalProtectionType.PASSIVE_ABLATIVE and not self.ablative_layers:
+            errors.append("Passive ablative protection requires ablative layers")
+        
+        return errors
+    
+    def calculate_total_properties(self) -> None:
+        """Calculate total system properties from individual components."""
+        # Calculate total thickness
+        self.total_thickness = (
+            sum(layer.thickness for layer in self.ablative_layers) +
+            sum(layer.thickness for layer in self.insulation_layers)
+        )
+        
+        # Calculate total mass (simplified - would need area in real implementation)
+        area = 1.0  # m² - placeholder, would be provided by calling system
+        self.total_mass = (
+            sum(layer.thickness * layer.density * area for layer in self.ablative_layers) +
+            sum(layer.thickness * 500 * area for layer in self.insulation_layers)  # Assumed insulation density
+        )
+    
+    def estimate_cooling_effectiveness(self, heat_flux: float) -> float:
+        """Estimate cooling effectiveness for given heat flux."""
+        if not self.active_cooling_channels:
+            return 0.0
+        
+        # Simplified effectiveness calculation
+        total_cooling_capacity = sum(
+            channel.mass_flow_rate * 4186 * 100  # Simplified: mass_flow * cp * ΔT
+            for channel in self.active_cooling_channels
+        )
+        
+        if heat_flux <= 0:
+            return 1.0
+        
+        return min(1.0, total_cooling_capacity / (heat_flux * 1.0))  # Assuming 1 m² area
+
+
+@dataclass
+class HypersonicMissionProfile:
+    """Mission profile for extreme hypersonic flight."""
+    profile_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    mission_name: str = ""
+    altitude_profile: np.ndarray = field(default_factory=lambda: np.array([]))  # m
+    mach_profile: np.ndarray = field(default_factory=lambda: np.array([]))
+    thermal_load_profile: np.ndarray = field(default_factory=lambda: np.array([]))  # W/m²
+    propulsion_mode_schedule: List[str] = field(default_factory=list)
+    cooling_system_schedule: List[bool] = field(default_factory=list)
+    mission_duration: float = 0.0  # s
+    max_altitude: float = 0.0  # m
+    max_mach: float = 0.0
+    max_thermal_load: float = 0.0  # W/m²
+    
+    def __post_init__(self):
+        """Initialize arrays if provided as lists."""
+        if isinstance(self.altitude_profile, (list, tuple)):
+            self.altitude_profile = np.array(self.altitude_profile)
+        if isinstance(self.mach_profile, (list, tuple)):
+            self.mach_profile = np.array(self.mach_profile)
+        if isinstance(self.thermal_load_profile, (list, tuple)):
+            self.thermal_load_profile = np.array(self.thermal_load_profile)
+    
+    def validate_profile(self) -> List[str]:
+        """Validate hypersonic mission profile."""
+        errors = []
+        
+        if not self.profile_id.strip():
+            errors.append("Profile ID cannot be empty")
+        
+        if not self.mission_name.strip():
+            errors.append("Mission name cannot be empty")
+        
+        if self.mission_duration <= 0:
+            errors.append("Mission duration must be positive")
+        
+        if self.max_altitude < 0:
+            errors.append("Maximum altitude cannot be negative")
+        
+        if self.max_mach <= 0:
+            errors.append("Maximum Mach number must be positive")
+        
+        if self.max_thermal_load < 0:
+            errors.append("Maximum thermal load cannot be negative")
+        
+        # Check array consistency
+        profile_lengths = [
+            len(self.altitude_profile),
+            len(self.mach_profile),
+            len(self.thermal_load_profile)
+        ]
+        
+        if len(set(profile_lengths)) > 1:
+            errors.append("All profile arrays must have the same length")
+        
+        if len(self.propulsion_mode_schedule) > 0 and len(self.propulsion_mode_schedule) != profile_lengths[0]:
+            errors.append("Propulsion mode schedule length must match profile arrays")
+        
+        if len(self.cooling_system_schedule) > 0 and len(self.cooling_system_schedule) != profile_lengths[0]:
+            errors.append("Cooling system schedule length must match profile arrays")
+        
+        # Physical constraints
+        if len(self.altitude_profile) > 0:
+            if np.any(self.altitude_profile < 0):
+                errors.append("Altitude profile cannot contain negative values")
+            
+            if np.any(self.altitude_profile > 200000):  # 200 km reasonable upper limit
+                errors.append("Altitude profile contains unrealistic values (>200 km)")
+        
+        if len(self.mach_profile) > 0:
+            if np.any(self.mach_profile <= 0):
+                errors.append("Mach profile must contain only positive values")
+            
+            if np.any(self.mach_profile > 100):  # Mach 100 as extreme upper limit
+                errors.append("Mach profile contains unrealistic values (>Mach 100)")
+        
+        if len(self.thermal_load_profile) > 0:
+            if np.any(self.thermal_load_profile < 0):
+                errors.append("Thermal load profile cannot contain negative values")
+        
+        return errors
+    
+    def calculate_profile_statistics(self) -> Dict[str, float]:
+        """Calculate statistics for the mission profile."""
+        stats = {}
+        
+        if len(self.altitude_profile) > 0:
+            stats['avg_altitude'] = float(np.mean(self.altitude_profile))
+            stats['min_altitude'] = float(np.min(self.altitude_profile))
+            stats['max_altitude'] = float(np.max(self.altitude_profile))
+        
+        if len(self.mach_profile) > 0:
+            stats['avg_mach'] = float(np.mean(self.mach_profile))
+            stats['min_mach'] = float(np.min(self.mach_profile))
+            stats['max_mach'] = float(np.max(self.mach_profile))
+        
+        if len(self.thermal_load_profile) > 0:
+            stats['avg_thermal_load'] = float(np.mean(self.thermal_load_profile))
+            stats['min_thermal_load'] = float(np.min(self.thermal_load_profile))
+            stats['max_thermal_load'] = float(np.max(self.thermal_load_profile))
+        
+        return stats
+    
+    def get_conditions_at_time(self, time_index: int) -> Dict[str, Any]:
+        """Get flight conditions at specific time index."""
+        if time_index < 0 or time_index >= len(self.altitude_profile):
+            raise IndexError("Time index out of range")
+        
+        conditions = {
+            'altitude': float(self.altitude_profile[time_index]),
+            'mach': float(self.mach_profile[time_index]),
+            'thermal_load': float(self.thermal_load_profile[time_index])
+        }
+        
+        if time_index < len(self.propulsion_mode_schedule):
+            conditions['propulsion_mode'] = self.propulsion_mode_schedule[time_index]
+        
+        if time_index < len(self.cooling_system_schedule):
+            conditions['cooling_active'] = self.cooling_system_schedule[time_index]
+        
+        return conditions
+
+
+
+# New data structures for extreme hypersonic conditions (Mach 60+)
+
+@dataclass
+class PlasmaConditions:
+    """Plasma conditions for extreme hypersonic flight analysis."""
+    electron_density: float  # m⁻³
+    electron_temperature: float  # K
+    ion_temperature: float  # K
+    magnetic_field: np.ndarray  # Tesla (3D vector)
+    plasma_frequency: float  # Hz
+    debye_length: float  # m
+    plasma_regime: PlasmaRegime = PlasmaRegime.WEAKLY_IONIZED
+    
+    def __post_init__(self):
+        """Validate plasma conditions after initialization."""
+        if self.magnetic_field.shape != (3,):
+            raise ValueError("Magnetic field must be a 3D vector")
+    
+    def validate_plasma_conditions(self) -> List[str]:
+        """Validate plasma conditions and return list of errors."""
+        errors = []
+        
+        # Physical constraints
+        if self.electron_density <= 0:
+            errors.append("Electron density must be positive")
+        
+        if self.electron_temperature <= 0:
+            errors.append("Electron temperature must be positive")
+        
+        if self.ion_temperature <= 0:
+            errors.append("Ion temperature must be positive")
+        
+        if self.plasma_frequency <= 0:
+            errors.append("Plasma frequency must be positive")
+        
+        if self.debye_length <= 0:
+            errors.append("Debye length must be positive")
+        
+        # Physical consistency checks
+        if self.electron_temperature > 100000:  # 100,000 K
+            errors.append("Electron temperature exceeds realistic limits")
+        
+        if self.ion_temperature > 100000:  # 100,000 K
+            errors.append("Ion temperature exceeds realistic limits")
+        
+        if self.electron_density > 1e24:  # m⁻³
+            errors.append("Electron density exceeds realistic limits")
+        
+        # Magnetic field magnitude check
+        b_magnitude = np.linalg.norm(self.magnetic_field)
+        if b_magnitude > 100:  # Tesla
+            errors.append("Magnetic field magnitude exceeds realistic limits")
+        
+        return errors
+    
+    def calculate_plasma_beta(self) -> float:
+        """Calculate plasma beta parameter (ratio of plasma to magnetic pressure)."""
+        k_b = 1.380649e-23  # Boltzmann constant
+        mu_0 = 4e-7 * np.pi  # Permeability of free space
+        
+        plasma_pressure = self.electron_density * k_b * (self.electron_temperature + self.ion_temperature)
+        magnetic_pressure = np.linalg.norm(self.magnetic_field)**2 / (2 * mu_0)
+        
+        if magnetic_pressure == 0:
+            return float('inf')
+        
+        return plasma_pressure / magnetic_pressure
+
+
+@dataclass
+class CombinedCyclePerformance:
+    """Performance characteristics for combined-cycle propulsion systems."""
+    air_breathing_thrust: float  # N
+    rocket_thrust: float  # N
+    transition_mach: float
+    fuel_flow_air_breathing: float  # kg/s
+    fuel_flow_rocket: float  # kg/s
+    specific_impulse: float  # s
+    propulsion_type: ExtremePropulsionType = ExtremePropulsionType.COMBINED_CYCLE_AIRBREATHING
+    operating_altitude_range: tuple[float, float] = (30000.0, 100000.0)  # m
+    
+    def validate_performance(self) -> List[str]:
+        """Validate combined-cycle performance data."""
+        errors = []
+        
+        # Thrust validation
+        if self.air_breathing_thrust < 0:
+            errors.append("Air-breathing thrust cannot be negative")
+        
+        if self.rocket_thrust < 0:
+            errors.append("Rocket thrust cannot be negative")
+        
+        if self.air_breathing_thrust == 0 and self.rocket_thrust == 0:
+            errors.append("At least one thrust component must be positive")
+        
+        # Transition Mach validation
+        if self.transition_mach <= 0:
+            errors.append("Transition Mach number must be positive")
+        
+        if self.transition_mach < 3:
+            errors.append("Transition Mach number seems too low for combined-cycle operation")
+        
+        if self.transition_mach > 25:
+            errors.append("Transition Mach number exceeds typical combined-cycle limits")
+        
+        # Fuel flow validation
+        if self.fuel_flow_air_breathing < 0:
+            errors.append("Air-breathing fuel flow cannot be negative")
+        
+        if self.fuel_flow_rocket < 0:
+            errors.append("Rocket fuel flow cannot be negative")
+        
+        # Specific impulse validation
+        if self.specific_impulse <= 0:
+            errors.append("Specific impulse must be positive")
+        
+        if self.specific_impulse > 10000:  # Unrealistic upper limit
+            errors.append("Specific impulse exceeds realistic limits")
+        
+        # Altitude range validation
+        if self.operating_altitude_range[0] >= self.operating_altitude_range[1]:
+            errors.append("Invalid operating altitude range")
+        
+        if self.operating_altitude_range[0] < 0:
+            errors.append("Operating altitude cannot be negative")
+        
+        return errors
+    
+    def calculate_total_thrust(self) -> float:
+        """Calculate total thrust from both propulsion modes."""
+        return self.air_breathing_thrust + self.rocket_thrust
+    
+    def calculate_thrust_to_weight_ratio(self, vehicle_mass: float) -> float:
+        """Calculate thrust-to-weight ratio."""
+        if vehicle_mass <= 0:
+            raise ValueError("Vehicle mass must be positive")
+        
+        total_thrust = self.calculate_total_thrust()
+        weight = vehicle_mass * 9.80665  # N
+        
+        return total_thrust / weight
+
+
+@dataclass
+class AblativeLayer:
+    """Definition of an ablative layer in thermal protection system."""
+    material_id: str
+    thickness: float  # m
+    ablation_rate: float  # m/s per MW/m²
+    heat_of_ablation: float  # J/kg
+    char_layer_conductivity: float  # W/(m⋅K)
+    
+    def validate_layer(self) -> List[str]:
+        """Validate ablative layer properties."""
+        errors = []
+        
+        if not self.material_id.strip():
+            errors.append("Material ID cannot be empty")
+        
+        if self.thickness <= 0:
+            errors.append("Layer thickness must be positive")
+        
+        if self.ablation_rate < 0:
+            errors.append("Ablation rate cannot be negative")
+        
+        if self.heat_of_ablation <= 0:
+            errors.append("Heat of ablation must be positive")
+        
+        if self.char_layer_conductivity <= 0:
+            errors.append("Char layer conductivity must be positive")
+        
+        return errors
+
+
+@dataclass
+class CoolingChannel:
+    """Definition of active cooling channel."""
+    channel_id: str
+    diameter: float  # m
+    length: float  # m
+    coolant_type: str
+    mass_flow_rate: float  # kg/s
+    inlet_temperature: float  # K
+    pressure_drop: float  # Pa
+    
+    def validate_channel(self) -> List[str]:
+        """Validate cooling channel properties."""
+        errors = []
+        
+        if not self.channel_id.strip():
+            errors.append("Channel ID cannot be empty")
+        
+        if self.diameter <= 0:
+            errors.append("Channel diameter must be positive")
+        
+        if self.length <= 0:
+            errors.append("Channel length must be positive")
+        
+        if not self.coolant_type.strip():
+            errors.append("Coolant type cannot be empty")
+        
+        if self.mass_flow_rate <= 0:
+            errors.append("Mass flow rate must be positive")
+        
+        if self.inlet_temperature <= 0:
+            errors.append("Inlet temperature must be positive")
+        
+        if self.pressure_drop < 0:
+            errors.append("Pressure drop cannot be negative")
+        
+        return errors
+
+
+@dataclass
+class InsulationLayer:
+    """Definition of insulation layer in thermal protection system."""
+    material_id: str
+    thickness: float  # m
+    thermal_conductivity: float  # W/(m⋅K)
+    max_operating_temperature: float  # K
+    
+    def validate_layer(self) -> List[str]:
+        """Validate insulation layer properties."""
+        errors = []
+        
+        if not self.material_id.strip():
+            errors.append("Material ID cannot be empty")
+        
+        if self.thickness <= 0:
+            errors.append("Layer thickness must be positive")
+        
+        if self.thermal_conductivity <= 0:
+            errors.append("Thermal conductivity must be positive")
+        
+        if self.max_operating_temperature <= 0:
+            errors.append("Maximum operating temperature must be positive")
+        
+        return errors
+
+
+@dataclass
+class ThermalProtectionSystem:
+    """Complete thermal protection system definition for extreme hypersonic conditions."""
+    system_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    ablative_layers: List[AblativeLayer] = field(default_factory=list)
+    active_cooling_channels: List[CoolingChannel] = field(default_factory=list)
+    insulation_layers: List[InsulationLayer] = field(default_factory=list)
+    total_thickness: float = 0.0  # m
+    total_mass: float = 0.0  # kg
+    cooling_effectiveness: float = 0.0  # dimensionless (0-1)
+    protection_type: ThermalProtectionType = ThermalProtectionType.PASSIVE_ABLATIVE
+    max_heat_flux_capacity: float = 0.0  # W/m²
+    
+    def validate_system(self) -> List[str]:
+        """Validate thermal protection system configuration."""
+        errors = []
+        
+        if not self.system_id.strip():
+            errors.append("System ID cannot be empty")
+        
+        # Must have at least one protection mechanism
+        if not self.ablative_layers and not self.active_cooling_channels and not self.insulation_layers:
+            errors.append("TPS must have at least one protection mechanism")
+        
+        # Validate individual layers
+        for i, layer in enumerate(self.ablative_layers):
+            layer_errors = layer.validate_layer()
+            for error in layer_errors:
+                errors.append(f"Ablative layer {i}: {error}")
+        
+        for i, channel in enumerate(self.active_cooling_channels):
+            channel_errors = channel.validate_channel()
+            for error in channel_errors:
+                errors.append(f"Cooling channel {i}: {error}")
+        
+        for i, layer in enumerate(self.insulation_layers):
+            layer_errors = layer.validate_layer()
+            for error in layer_errors:
+                errors.append(f"Insulation layer {i}: {error}")
+        
+        # System-level validation
+        if self.total_thickness < 0:
+            errors.append("Total thickness cannot be negative")
+        
+        if self.total_mass < 0:
+            errors.append("Total mass cannot be negative")
+        
+        if self.cooling_effectiveness < 0 or self.cooling_effectiveness > 1:
+            errors.append("Cooling effectiveness must be between 0 and 1")
+        
+        if self.max_heat_flux_capacity < 0:
+            errors.append("Maximum heat flux capacity cannot be negative")
+        
+        return errors
+    
+    def calculate_total_thickness(self) -> float:
+        """Calculate total thickness from all layers."""
+        total = 0.0
+        
+        for layer in self.ablative_layers:
+            total += layer.thickness
+        
+        for layer in self.insulation_layers:
+            total += layer.thickness
+        
+        self.total_thickness = total
+        return total
+    
+    def estimate_mass_per_area(self, area: float) -> float:
+        """Estimate mass per unit area for the TPS."""
+        if area <= 0:
+            raise ValueError("Area must be positive")
+        
+        # This is a simplified estimation - would need material density data
+        # for accurate calculation
+        mass_per_area = self.total_thickness * 2000  # Assume 2000 kg/m³ average density
+        return mass_per_area * area
+
+
+@dataclass
+class HypersonicMissionProfile:
+    """Mission profile definition for extreme hypersonic flight (Mach 60+)."""
+    profile_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    mission_name: str = ""
+    altitude_profile: np.ndarray = field(default_factory=lambda: np.array([]))  # m
+    mach_profile: np.ndarray = field(default_factory=lambda: np.array([]))
+    thermal_load_profile: np.ndarray = field(default_factory=lambda: np.array([]))  # W/m²
+    propulsion_mode_schedule: List[str] = field(default_factory=list)
+    cooling_system_schedule: List[bool] = field(default_factory=list)
+    plasma_conditions_profile: List[PlasmaConditions] = field(default_factory=list)
+    mission_duration: float = 0.0  # s
+    max_thermal_load: float = 0.0  # W/m²
+    
+    def validate_profile(self) -> List[str]:
+        """Validate hypersonic mission profile."""
+        errors = []
+        
+        if not self.mission_name.strip():
+            errors.append("Mission name cannot be empty")
+        
+        # Check array lengths consistency
+        profile_lengths = []
+        if len(self.altitude_profile) > 0:
+            profile_lengths.append(len(self.altitude_profile))
+        if len(self.mach_profile) > 0:
+            profile_lengths.append(len(self.mach_profile))
+        if len(self.thermal_load_profile) > 0:
+            profile_lengths.append(len(self.thermal_load_profile))
+        
+        if len(set(profile_lengths)) > 1:
+            errors.append("All profile arrays must have the same length")
+        
+        if len(self.propulsion_mode_schedule) > 0 and len(self.propulsion_mode_schedule) != profile_lengths[0]:
+            errors.append("Propulsion mode schedule length must match profile arrays")
+        
+        if len(self.cooling_system_schedule) > 0 and len(self.cooling_system_schedule) != profile_lengths[0]:
+            errors.append("Cooling system schedule length must match profile arrays")
+        
+        # Physical constraints for extreme hypersonic flight
+        if len(self.altitude_profile) > 0:
+            if np.any(self.altitude_profile < 30000):  # Minimum altitude for Mach 60
+                errors.append("Altitude profile contains values below minimum for Mach 60 flight (30 km)")
+            
+            if np.any(self.altitude_profile > 200000):  # 200 km reasonable upper limit
+                errors.append("Altitude profile contains unrealistic values (>200 km)")
+        
+        if len(self.mach_profile) > 0:
+            if np.any(self.mach_profile < 25):  # Minimum for extreme hypersonic
+                errors.append("Mach profile contains values below extreme hypersonic regime (Mach 25)")
+            
+            if np.any(self.mach_profile > 100):  # Mach 100 as extreme upper limit
+                errors.append("Mach profile contains unrealistic values (>Mach 100)")
+        
+        if len(self.thermal_load_profile) > 0:
+            if np.any(self.thermal_load_profile < 0):
+                errors.append("Thermal load profile cannot contain negative values")
+            
+            if np.any(self.thermal_load_profile > 1e9):  # 1 GW/m² as extreme upper limit
+                errors.append("Thermal load profile contains unrealistic values (>1 GW/m²)")
+        
+        # Mission duration validation
+        if self.mission_duration < 0:
+            errors.append("Mission duration cannot be negative")
+        
+        if self.max_thermal_load < 0:
+            errors.append("Maximum thermal load cannot be negative")
+        
+        # Validate plasma conditions if provided
+        for i, plasma_cond in enumerate(self.plasma_conditions_profile):
+            plasma_errors = plasma_cond.validate_plasma_conditions()
+            for error in plasma_errors:
+                errors.append(f"Plasma conditions {i}: {error}")
+        
+        return errors
+    
+    def calculate_profile_statistics(self) -> Dict[str, float]:
+        """Calculate statistics for the hypersonic mission profile."""
+        stats = {}
+        
+        if len(self.altitude_profile) > 0:
+            stats['avg_altitude'] = float(np.mean(self.altitude_profile))
+            stats['min_altitude'] = float(np.min(self.altitude_profile))
+            stats['max_altitude'] = float(np.max(self.altitude_profile))
+        
+        if len(self.mach_profile) > 0:
+            stats['avg_mach'] = float(np.mean(self.mach_profile))
+            stats['min_mach'] = float(np.min(self.mach_profile))
+            stats['max_mach'] = float(np.max(self.mach_profile))
+        
+        if len(self.thermal_load_profile) > 0:
+            stats['avg_thermal_load'] = float(np.mean(self.thermal_load_profile))
+            stats['min_thermal_load'] = float(np.min(self.thermal_load_profile))
+            stats['max_thermal_load'] = float(np.max(self.thermal_load_profile))
+            stats['peak_thermal_load'] = float(np.max(self.thermal_load_profile))
+        
+        # Calculate time in different flight regimes
+        if len(self.mach_profile) > 0:
+            extreme_hypersonic_time = np.sum(self.mach_profile >= 25)
+            mach_60_plus_time = np.sum(self.mach_profile >= 60)
+            
+            stats['extreme_hypersonic_time_fraction'] = float(extreme_hypersonic_time / len(self.mach_profile))
+            stats['mach_60_plus_time_fraction'] = float(mach_60_plus_time / len(self.mach_profile))
+        
+        return stats
+    
+    def get_conditions_at_time(self, time_index: int) -> Dict[str, Any]:
+        """Get flight conditions at specific time index."""
+        if time_index < 0 or time_index >= len(self.altitude_profile):
+            raise IndexError("Time index out of range")
+        
+        conditions = {
+            'altitude': float(self.altitude_profile[time_index]),
+            'mach': float(self.mach_profile[time_index]),
+            'thermal_load': float(self.thermal_load_profile[time_index])
+        }
+        
+        if time_index < len(self.propulsion_mode_schedule):
+            conditions['propulsion_mode'] = self.propulsion_mode_schedule[time_index]
+        
+        if time_index < len(self.cooling_system_schedule):
+            conditions['cooling_active'] = self.cooling_system_schedule[time_index]
+        
+        if time_index < len(self.plasma_conditions_profile):
+            conditions['plasma_conditions'] = self.plasma_conditions_profile[time_index]
+        
+        return conditions
+    
+    def requires_plasma_modeling(self) -> bool:
+        """Check if mission profile requires plasma flow modeling."""
+        if len(self.mach_profile) == 0:
+            return False
+        
+        # Plasma effects become significant above Mach 25
+        return np.any(self.mach_profile >= 25)
+    
+    def requires_active_cooling(self) -> bool:
+        """Check if mission profile requires active cooling systems."""
+        if len(self.thermal_load_profile) == 0:
+            return False
+        
+        # Active cooling typically required above 10 MW/m²
+        return np.any(self.thermal_load_profile >= 1e7)
+
+@dataclass
+class PlasmaConditions:
+    """Plasma conditions for extreme hypersonic flight."""
+    electron_density: float  # m⁻³
+    electron_temperature: float  # K
+    ion_temperature: float  # K
+    magnetic_field: np.ndarray  # Tesla
+    plasma_frequency: float  # Hz
+    debye_length: float  # m
+    ionization_fraction: float  # dimensionless
+    regime: PlasmaRegime = PlasmaRegime.WEAKLY_IONIZED
+
+
+@dataclass
+class GasMixture:
+    """Gas mixture composition for plasma calculations."""
+    species: Dict[str, float]  # species name -> mole fraction
+    temperature: float  # K
+    pressure: float  # Pa
+    total_density: float  # kg/m³
+
+
+@dataclass
+class ElectromagneticProperties:
+    """Electromagnetic properties of plasma flow."""
+    conductivity: float  # S/m
+    hall_parameter: float  # dimensionless
+    magnetic_reynolds_number: float  # dimensionless
+    electric_field: np.ndarray  # V/m
+    current_density: np.ndarray  # A/m²
+    lorentz_force_density: np.ndarray  # N/m³
+
+
+@dataclass
+class MagneticFieldConfiguration:
+    """Magnetic field configuration for MHD analysis."""
+    field_strength: np.ndarray  # Tesla
+    field_gradient: np.ndarray  # Tesla/m
+    field_type: str  # 'uniform', 'dipole', 'custom'
+    source_location: Optional[np.ndarray] = None  # m
+
+
+@dataclass
+class CombinedCyclePerformance:
+    """Combined-cycle propulsion performance data."""
+    air_breathing_thrust: float  # N
+    rocket_thrust: float  # N
+    transition_mach: float
+    fuel_flow_air_breathing: float  # kg/s
+    fuel_flow_rocket: float  # kg/s
+    specific_impulse: float  # s
+
+
+@dataclass
+class ThermalProtectionSystem:
+    """Thermal protection system configuration."""
+    ablative_layers: List[Dict[str, Any]]  # List of ablative layer specifications
+    active_cooling_channels: List[Dict[str, Any]]  # List of cooling channel specifications
+    insulation_layers: List[Dict[str, Any]]  # List of insulation layer specifications
+    total_thickness: float  # m
+    total_mass: float  # kg
+    cooling_effectiveness: float
+
+
+@dataclass
+class HypersonicMissionProfile:
+    """Mission profile for hypersonic flight."""
+    altitude_profile: np.ndarray  # m
+    mach_profile: np.ndarray
+    thermal_load_profile: np.ndarray  # W/m²
+    propulsion_mode_schedule: List[str]
+    cooling_system_schedule: List[bool]

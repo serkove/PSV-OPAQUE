@@ -318,6 +318,30 @@ class ReliabilityError(EngineError):
         })
 
 
+class WorkflowError(SDKError):
+    """Error specific to workflow validation operations."""
+    
+    def __init__(self, message: str, workflow_name: Optional[str] = None,
+                 step_name: Optional[str] = None, **kwargs):
+        """Initialize workflow error.
+        
+        Args:
+            message: Error message.
+            workflow_name: Name of workflow where error occurred.
+            step_name: Name of step where error occurred.
+            **kwargs: Additional arguments for SDKError.
+        """
+        super().__init__(message, **kwargs)
+        self.workflow_name = workflow_name
+        self.step_name = step_name
+        
+        # Add workflow-specific context
+        self.context.update({
+            'workflow_name': self.workflow_name,
+            'step_name': self.step_name
+        })
+
+
 class ErrorHandler:
     """Centralized error handling for the Fighter Jet SDK."""
     
