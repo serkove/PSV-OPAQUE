@@ -1,12 +1,12 @@
-# PSV-OPAQUE: Advanced Modular Hypersonic Fighter Aircraft
+# PSV-OPAQUE: An experimental fighter jet design based on Paradigm-shifting vehicles with Mil-orb deployement capabilites
 
 ![Design](assets/PSV.png)
 
 ##  Overview
 
-**PSV-OPAQUE** is an early prototype of a  6th-generation fighter aircraft that combines the modular design philosophy of the Russian SU-75 Checkmate with advanced capabilites from pradigm-shifting vehicles (PSVs) and Milorbs . This aircraft represents the pinnacle of aerospace engineering, capable of extreme hypersonic flight up to **Mach 60** while maintaining superior stealth characteristics and unprecedented multi-role operational flexibility.
+**PSV-OPAQUE** is an early prototype of a  6th-generation fighter aircraft that combines the modular design philosophy of the Russian SU-75 Checkmate with advanced capabilites from pradigm-shifting vehicles (PSVs) and Milorbs . This aircraft design is capable of extreme hypersonic flight up to **Mach 60** while maintaining superior stealth characteristics and unprecedented multi-role operational flexibility.
 
-### 🎯 Quick Start (5 Minutes)
+###  Quick Start (5 Minutes)
 ```bash
 # 1. Clone and install
 git clone https://github.com/serkove/PSV-OPAQUE.git 
