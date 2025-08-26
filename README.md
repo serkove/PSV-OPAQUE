@@ -206,7 +206,7 @@ Cutting-edge plasma sensor technology for extreme environment operation:
 
 ---
 
-## ✈️ Aerodynamic Design and Performance
+##  Aerodynamic Design and Performance
 
 ### Flight Envelope
 ```yaml
@@ -306,7 +306,7 @@ Hypersonic Weapons:
 
 ---
 
-## 🛸 Mil-Orb Technology Integration
+##  Mil-Orb Technology Integration
 
 ### Deployable Orb Systems
 PSV-OPAQUE incorporates revolutionary **Mil-orb** technology for enhanced battlefield awareness and capability:
@@ -614,7 +614,7 @@ Fighter Jet SDK Components:
 
 #### Engine Capabilities Overview
 
-##### 🎨 Design Engine
+#####  Design Engine
 ```python
 from fighter_jet_sdk.engines.design import DesignEngine
 
@@ -671,7 +671,7 @@ performance = propulsion_engine.analyze_combined_cycle(
 - Fuel system optimization
 - Performance envelope calculation
 
-##### 📡 Sensors Engine
+#####  Sensors Engine
 ```python
 from fighter_jet_sdk.engines.sensors import SensorsEngine
 
@@ -690,7 +690,7 @@ radar_performance = sensors_engine.analyze_aesa_radar(
 - AI sensor fusion
 - Electronic warfare analysis
 
-##### 🌪️ Aerodynamics Engine
+#####  Aerodynamics Engine
 ```python
 from fighter_jet_sdk.engines.aerodynamics import AerodynamicsEngine
 
